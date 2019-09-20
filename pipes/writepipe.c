@@ -1,49 +1,81 @@
 #include <stdio.h>
-
-int main() {
-#include <stdio.h>
-#include <string.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
-    int main()
-    {
-        int fd;
+/**
+ * Instructions
+ *
+ * Run this program from a Linux command line and start entering characters; the lines are typically sent when newline is pressed.
+ * Output is copied to STDOUT. Informational stuff is printed at STDERR
+ *
+ * other forms from the Linux command line:
+ * 1) This one will check if the whole file is sent correctly by catching the output and running a DIFF-command with
+ *    the original input.
+ * $ ./writepipe < inputfile.txt > /tmp/result.out && diff inputfile.txt /tmp/result.out
+ *
+ * Once the pipe is created (in /tmp/mypipe) also the CAT-command line works:
+ * $ cat > /tmp/myfifo
+ *
+ * Notice that the Pipe (/tmp/myfifo) needs to be disposed of through a Linux RM command from the command line (or a
+ *   reboot as the file resides in /tmp)
+ */
 
-        // FIFO file path
-        char * myfifo = "/tmp/myfifo";
+/** File descriptor for pipe */
+int fd;
 
-        // Creating the named file(FIFO)
-        // mkfifo(<pathname>, <permission>)
-        mkfifo(myfifo, 0666);
+void intHandler(int dummy) {
+    fprintf(stderr, "\nPressed control-c\n");
 
-        char arr1[80], arr2[80];
-        while (1)
-        {
-            // Open FIFO for write only
-            fd = open(myfifo, O_WRONLY);
+    close(fd);
+    fprintf(stderr, "\nPipe closed\n");
+    exit(0);
+}
 
-            // Take an input arr2ing from user.
-            // 80 is maximum length
-            fgets(arr2, 80, stdin);
+int main() {
+    signal(SIGINT, intHandler);
 
-            // Write the input arr2ing on FIFO
-            // and close it
-            write(fd, arr2, strlen(arr2)+1);
-            close(fd);
+    // FIFO file path
+    char *myfifo = "/tmp/myfifo";
 
-            // Open FIFO for Read only
-            fd = open(myfifo, O_RDONLY);
+    // Creating the named file(FIFO) --> only this side of the pipeline will create the file (not the reading part)
+    mkfifo(myfifo, 0666);
 
-            // Read from FIFO
-            read(fd, arr1, sizeof(arr1));
+    // some reporting to STDERR
+    fprintf(stderr, "**** Opening pipe, waiting for other party to connect\n");
 
-            // Print the read message
-            printf("User2: %s\n", arr1);
-            close(fd);
+    // open the file
+    fd = open(myfifo, O_WRONLY);
+
+    // indicate the pipe has a sending and receiving end setup
+    fprintf(stderr, "**** Pipe opened. Waiting for user input from keyboard\n\n");
+
+    char reachedEOF = false;
+    int count = 0;
+
+    while (!reachedEOF) {
+        // receive one char at a time
+        char c;
+        c = fgetc(stdin);
+
+        // check for EOF
+        reachedEOF = (c == EOF);
+
+        // if not EOF on STDIN, send it through the pipe
+        if (!reachedEOF) {
+            count++;
+
+            write(fd, &c, 1);
+
+            // send a copy of the read char to STDOUT (--> this way we can check input and output using Linux DIFF-command
+            fprintf(stdout, "%c", (int) c);
         }
-        return 0;
     }
+    fprintf(stderr, "\nReached EOF\nTerminating\n");
+    fprintf(stderr, "Written : %d\n", count);
+    close(fd);
+    return 0;
 }

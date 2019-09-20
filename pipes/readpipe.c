@@ -1,49 +1,84 @@
 #include <stdio.h>
-
-int main() {
-#include <stdio.h>
-#include <string.h>
 #include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
+#include <signal.h>
+#include <stdbool.h>
+#include <stdlib.h>
 
-    int main()
+
+/**
+ * Instructions
+ *
+ * Reads characters over a named pipe.
+ *
+ * First start the program writepipe.c. once the program connects with that pipe output is received
+ *
+ * Also try on a Linux prompt (once the pipe is created through the c-progam 'readpipe.c'
+ * cat < /tmp/myfifo
+ * cat < /tmp/myfifo | wc -c
+ * cat < /tmp/myfifo > test.txt
+ *
+ */
+
+/* File Descriptor for pipe */
+int fd;
+
+/** handler for CTRL+C for proper closing the pipe */
+void intHandler(int dummy) {
+    fprintf(stderr, "\nPressed control-c\n");
+
+    close(fd);
+    fprintf(stderr, "\nPipe closed\n");
+    exit(0);
+}// intHandler
+
+int main()
+{
+    // install a proper signal handler
+    signal(SIGINT, intHandler);
+
+    // FIFO file path
+    char *myfifo = "/tmp/myfifo";
+
+    fprintf(stderr, "**** Opening pipe, waiting for other party to connect\n");
+    fd = open(myfifo, O_RDONLY);
+
+    fprintf(stderr, "**** Pipe opened. Waiting for characters from pipe.\n\n");
+
+    // buffer for holding the incoming data
+    char pipedata[256];
+    // flag to stop while-loop on EOF on pipe
+    int reachedEOFOnPipe = false;
+
+    // counter of nr of bytes (useful for checking)
+    int count = 0;
+
+    while (!reachedEOFOnPipe)
     {
-        int fd;
+        // Read from FIFO
+        ssize_t bytesRead;
+        int bytesReadInt;
+        bytesRead = read(fd, pipedata, sizeof(pipedata) - 2);
 
-        // FIFO file path
-        char * myfifo = "/tmp/myfifo";
+        bytesReadInt = (int) bytesRead;
 
-        // Creating the named file(FIFO)
-        // mkfifo(<pathname>, <permission>)
-        mkfifo(myfifo, 0666);
+        // check for EOF and set flag
+        reachedEOFOnPipe = (bytesReadInt == 0);
 
-        char arr1[80], arr2[80];
-        while (1)
-        {
-            // Open FIFO for write only
-            fd = open(myfifo, O_WRONLY);
+        // make sure buffer is terminated (on buffer full, the \0 may not have reached our side of the pipeline
+        pipedata[(int) bytesReadInt] = '\0';
 
-            // Take an input arr2ing from user.
-            // 80 is maximum length
-            fgets(arr2, 80, stdin);
+        // increase counter
+        count += (int) bytesRead;
 
-            // Write the input arr2ing on FIFO
-            // and close it
-            write(fd, arr2, strlen(arr2)+1);
-            close(fd);
-
-            // Open FIFO for Read only
-            fd = open(myfifo, O_RDONLY);
-
-            // Read from FIFO
-            read(fd, arr1, sizeof(arr1));
-
-            // Print the read message
-            printf("User2: %s\n", arr1);
-            close(fd);
-        }
-        return 0;
+        // if not EOF, then send to STDOUT
+        if (!reachedEOFOnPipe) printf("%s", pipedata);
     }
-}
+    // some reporting afterwards
+    fprintf(stderr, "Pipe reached EOF\n");
+    fprintf(stderr, "Received: %d\n", count);
+
+    // close the pipe
+    close(fd);
+    return 0;
+}// main
