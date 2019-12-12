@@ -1,6 +1,9 @@
 echo -------------------------------------------------------------
 gcc input1.c -o input1
+if [ $? == 0 ] ; then mv input1 ~/bin ; fi
 echo -------------------------------------------------------------
 gcc input2.c -o input2
+if [ $? == 0 ] ; then mv input2 ~/bin ; fi
 echo -------------------------------------------------------------
-gcc input3.c -o input3
+gcc addnumber.c -o addnumber
+if [ $? == 0 ] ; then mv addnumber ~/bin ; fi
