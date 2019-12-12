@@ -4,16 +4,11 @@
   
   Om dit programma te starten via Bash:
   
-  user@host:~/programs$ input3  -f mysourcefile -n 10
-  
-  of 
-  
-  user@host:~/programs$ input3 < mysourcefile -n 33
-   
-  of
-   
-  user@host:~/programs$ input3 < mysourcefile
-  
+  user@host:~/programs$ addnumber -f mysourcefile -n 10
+  user@host:~/programs$ addnumber < mysourcefile -n 33
+  user@host:~/programs$ addnumber < mysourcefile
+  user@host:~/programs$ addnumber -?
+
 ***/
 
 #include <stdio.h>
@@ -30,19 +25,20 @@ void main(int argc,  char * const *argv){
   
   fp = stdin;
 
-  while ((opt = getopt(argc, argv, "f:n:")) != -1) {
+  while ((opt = getopt(argc, argv, "f:n:?")) != -1) {
 	  switch (opt) {
 		  case 'f':
 		    fp = fopen(optarg, "r");
 		    if (fp == NULL) {
 			fprintf(stderr,"Cannot open file %s\n", optarg);
-                        exit(1);
+                        exit(EXIT_FAILURE);
                     }
 		    break;
 		  case 'n':
                     fprintf(stderr,"%s\n" , optarg);
 		    linenumber = atoi(optarg);
 		    break;
+                 case '?':
 		 default: /* '?' */
 			fprintf(stderr, "Usage: %s [-f filename] [-n startnumber] \n",
 			argv[0]);

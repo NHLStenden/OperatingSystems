@@ -1,10 +1,19 @@
+#!/bin/bash
+# This script adds linenumbers to each line of a file (prefix)
+#  Examples:
+#  user@host:~/programs$ addnumber  -f mysourcefile -n 10
+#  user@host:~/programs$ addnumber < mysourcefile -n 33
+#  user@host:~/programs$ addnumber < mysourcefile
+#  
+#  
+
 usestdin=Y
 filename=/dev/stdin
 declare -i linenumber
 
 linenumber=1
 
-while getopts f:n: name
+while getopts f:n:? name
 do
      case $name in
      n)      linenumber=$OPTARG;;
