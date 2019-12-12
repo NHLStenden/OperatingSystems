@@ -19,12 +19,15 @@ void main(int argc,  char * const *argv){
   char *buffer = NULL;
   size_t len;
   ssize_t read;
-  long linenumber = 1;
+  long linenumber; 
   FILE * fp;
   int opt;
   
-  fp = stdin;
+  /* Set default values */
+  fp = stdin;    /* Default input from Standard In (channel 0) */
+  linenumber = 1;/* Default value for start of linenumber */
 
+  /* Cycle through all command line parameters to override default values */
   while ((opt = getopt(argc, argv, "f:n:?")) != -1) {
 	  switch (opt) {
 		  case 'f':
