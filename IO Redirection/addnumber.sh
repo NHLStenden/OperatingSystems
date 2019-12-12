@@ -19,7 +19,7 @@ do
      n)      linenumber=$OPTARG;;
      f)      usestdin=N
              filename="$OPTARG";;
-     ?)     printf "Usage: %s: [-f filename] [-n start number] args\n"  $0
+     ?)     printf "Usage: %s: [-f filename] [-n start number] args\n"  `basename $0`
             exit 2;;
      esac
 done
