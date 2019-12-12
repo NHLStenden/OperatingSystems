@@ -1,0 +1,7 @@
+Karel;de;Vries;Student
+Martin;;Molema;Docent
+Pietje;;Puk;Student
+Jan;;Jansen;Student
+Jan;;Pietersen;Student
+Hans;;Janssen;Student
+Peter;;Jansen;Student
