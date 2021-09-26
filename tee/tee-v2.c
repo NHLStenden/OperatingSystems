@@ -1,3 +1,13 @@
+/*
+* @author Martin Molema
+* @organisation NHL Stenden
+* @version 1
+* @date 2021-09-26
+* @seealso https://man7.org/linux/man-pages/man1/tee.1.html
+* @description this program serves as an example for I/O redirection and the use
+*   of getopts to change the behaviour of a CLI-program.
+*/
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,13 +24,22 @@ int main(int argc, char **argv) {
   int useAppend = false;
   char c;
   
+  /* Now start processing the options supplied on the command line.
+  *  In this case only the -a option is used to change behaviour from 
+  *  creating/overwriting the output file to appending to it .
+  *  The -? option will print a usage message to stderr.
+  */
   while ((c = getopt (argc, argv, "a")) != -1){
     switch (c)
       {
       case 'a':
         useAppend = true;
+        fprintf (stderr,"using append-mode\n");
         break;
       case '?':
+        /* information is sent to STDERR instead of STDOUT! to separate output
+        *  from the real output 
+        */
         fprintf (stderr,"usage: tee [-a] filename\n");
         fprintf (stderr,"  -a\tuse append instead of overwrite \n");
         return 1;
